@@ -12,9 +12,9 @@ const requireLogin = require('../middleware/requireLogin');
 // });
 
 router.post("/signup", (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password,pic } = req.body;
   console.log(req.body)
-  if (!email || !password || !name) {
+  if (!email || !password || !name ) {
     return res.status(422).json({ error: "Please enter all the fields" });
   }
   User.findOne({ email: email })
@@ -29,6 +29,7 @@ router.post("/signup", (req, res) => {
           email,
           password: hashedpassword,
           name,
+          pic,
         });
         user
           .save()
@@ -59,7 +60,7 @@ router.post("/signin", (req, res) => {
       .then((doMatch) => {
         if (doMatch) {
           const token = jwt.sign({ _id: savedUser._id }, JWT_SECRET);
-          res.json({ token });
+          res.json({ token, user: savedUser }); // Include the user data in the response
         } else {
           return res.status(422).json({ error: "Invalid email or password" });
         }
@@ -69,5 +70,6 @@ router.post("/signin", (req, res) => {
       });
   });
 });
+
 
 module.exports = router;
