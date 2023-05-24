@@ -49,6 +49,20 @@ router.post("/createdpost", requireLogin, (req, res) => {
       console.log(err);
     });
 });
+router.get("/getsubpost", requireLogin, (req, res) => {
+  // if postedBy in following
+  Post.find({ postedBy: { $in: req.user.following } })
+    .populate("postedBy", "_id name")
+    .populate("comments.postedBy", "_id name")
+    .sort("-createdAt")
+    .then((posts) => {
+      res.json({ posts });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
 router.put("/like", requireLogin, (req, res) => {
   Post.findByIdAndUpdate(
     req.body.postId,

@@ -1,3 +1,4 @@
+const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   name: {
@@ -17,5 +18,8 @@ const userSchema = new mongoose.Schema({
     default:
       "https://res.cloudinary.com/cnq/image/upload/v1586197723/noimage_d4ipmd.png",
   },
+  followers: [{ type:ObjectId, ref: "User" }],
+  following: [{ type:ObjectId, ref: "User" }],
 });
 mongoose.model("User", userSchema);
+    

@@ -11,11 +11,14 @@ router.get("/user/:id", requireLogin, (req, res) => {
     .then((user) => {
       Post.find({ postedBy: req.params.id })
         .populate("postedBy", "_id name")
-        .exec((err, posts) => {
-          if (err) {
-            return res.status(422).json({ error: err });
+        .then((posts) => {
+          if (!posts) {
+            return res.status(422).json({ error: "No posts found" });
           }
           res.json({ user, posts });
+        })
+        .catch((err) => {
+          return res.status(422).json({ error: err });
         });
     })
     .catch((err) => {
@@ -24,18 +27,11 @@ router.get("/user/:id", requireLogin, (req, res) => {
 });
 
 router.put("/follow", requireLogin, (req, res) => {
-  User.findByIdAndUpdate(
-    req.body.followId,
-    {
-      $push: { followers: req.user._id },
-    },
-    {
-      new: true,
-    },
-    (err, result) => {
-      if (err) {
-        return res.status(422).json({ error: err });
-      }
+  User.findByIdAndUpdate(req.body.followId, {
+    $push: { followers: req.user._id },
+  })
+    .exec()
+    .then((result) => {
       User.findByIdAndUpdate(
         req.user._id,
         {
@@ -44,28 +40,25 @@ router.put("/follow", requireLogin, (req, res) => {
         { new: true }
       )
         .select("-password")
+        .exec()
         .then((result) => {
           res.json(result);
         })
         .catch((err) => {
           return res.status(422).json({ error: err });
         });
-    }
-  );
+    })
+    .catch((err) => {
+      return res.status(422).json({ error: err });
+    });
 });
+
 router.put("/unfollow", requireLogin, (req, res) => {
-  User.findByIdAndUpdate(
-    req.body.unfollowId,
-    {
-      $pull: { followers: req.user._id },
-    },
-    {
-      new: true,
-    },
-    (err, result) => {
-      if (err) {
-        return res.status(422).json({ error: err });
-      }
+  User.findByIdAndUpdate(req.body.unfollowId, {
+    $pull: { followers: req.user._id },
+  })
+    .exec()
+    .then((result) => {
       User.findByIdAndUpdate(
         req.user._id,
         {
@@ -74,28 +67,33 @@ router.put("/unfollow", requireLogin, (req, res) => {
         { new: true }
       )
         .select("-password")
+        .exec()
         .then((result) => {
           res.json(result);
         })
         .catch((err) => {
           return res.status(422).json({ error: err });
         });
-    }
-  );
+    })
+    .catch((err) => {
+      return res.status(422).json({ error: err });
+    });
 });
 
 router.put("/updatepic", requireLogin, (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     { $set: { pic: req.body.pic } },
-    { new: true },
-    (err, result) => {
-      if (err) {
-        return res.status(422).json({ error: "pic canot post" });
-      }
+    { new: true }
+  )
+    .select("-password")
+    .exec()
+    .then((result) => {
       res.json(result);
-    }
-  );
+    })
+    .catch((err) => {
+      return res.status(422).json({ error: "Cannot update profile picture" });
+    });
 });
 
 router.post("/search-users", (req, res) => {
